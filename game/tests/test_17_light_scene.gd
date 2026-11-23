@@ -12,12 +12,14 @@ extends SceneTree
 ##      and back; Tab's debug_view survives a switch; the Slab keeps the
 ##      original material; F6 sets light_term on the lit materials and the
 ##      gallery's lit columns; F7 swaps the labels.
-##   3. The gallery: five columns labelled in mode order, column 0 on the
-##      original materials, columns 1-4 lit with light_model 0..3, one
-##      shared rock mesh, one height for all, no terrain above a tile, the
-##      plinths reaching below the terrain.
-##   4. Input map: F5, F6, F7, keyboard only; the Lesson 15-16 bindings.
-##      run/main_scene; the Lesson 16 scene has no Shading or Gallery.
+##   3. The gallery: five columns labelled in mode order, column 0 on
+##      copies of the original materials (same shader, same values; Tab
+##      on the scene's terrain leaves them alone), columns 1-4 lit with
+##      light_model 0..3, one shared rock mesh, one height for all, no
+##      terrain above a tile, the plinths reaching below the terrain.
+##   4. Input map: F5, F6, F7, keyboard only; the Lesson 15-16 bindings;
+##      the Lesson 16 scene has no Shading or Gallery. (The run/main_scene
+##      check moved to tests/test_18_light_presets.gd.)
 ## Run: Godot --headless --path game -s res://tests/test_17_light_scene.gd
 
 const LIGHT_UNIFORMS := ["light_model", "light_term", "light_wrap", "light_sigma_degrees", "light_f0"]
@@ -91,6 +93,10 @@ func _check_scene() -> void:
 	scene._unhandled_input(_key(KEY_F5))
 	_expect(shading.mode == ShadingSwitch.Mode.BUILT_IN and terrain.material == painted and boulders.material == weathered, "fifth F5: back to the originals")
 	_expect(painted.get_shader_parameter("debug_view") == 1, "debug_view copied back to the original")
+	var gallery_alone := true
+	for column in gallery.columns:
+		gallery_alone = gallery_alone and column.tile_material != painted and column.tile_material.get_shader_parameter("debug_view") == 0
+	_expect(gallery_alone, "Tab leaves the gallery's five tile materials alone")
 	scene._unhandled_input(_key(KEY_TAB))
 	scene._unhandled_input(_key(KEY_TAB))
 	_expect(painted.get_shader_parameter("debug_view") == 0, "Tab twice more: lit view again")
@@ -131,7 +137,8 @@ func _check_gallery(gallery: ShadingGallery, terrain: Terrain, painted: ShaderMa
 		var i: int = column.mode
 		_expect(column.label.text == ShadingSwitch.MODE_NAMES[i], "column %d labelled %s" % [i, column.label.text])
 		if i == ShadingSwitch.Mode.BUILT_IN:
-			_expect(column.tile_material == painted and column.rock_material == weathered and column.tile.material == painted, "column 0: the original materials")
+			_expect(column.tile_material != painted and column.rock_material != weathered and column.tile.material == column.tile_material, "column 0: its own materials")
+			_expect(_same_parameters(column.tile_material, painted) and _same_parameters(column.rock_material, weathered), "column 0: copies of the original materials (shader and values)")
 		else:
 			_expect(column.tile_material.get_shader_parameter("light_model") == i - 1 and column.rock_material.get_shader_parameter("light_model") == i - 1 and column.rock.mesh == gallery.rock_mesh and column.rock.material_override == column.rock_material, "column %d: lit, light_model %d, shared rock mesh" % [i, i - 1])
 		heights.append(column.root.global_position.y)
@@ -161,7 +168,6 @@ func _check_input_map() -> void:
 	_expect(guide_actions == [&"toggle_crawl"], "Guide carries one action: %s" % [guide_actions])
 	_expect(_has_key(&"cycle_tick_rate", KEY_T) and _has_button(&"cycle_tick_rate", JOY_BUTTON_DPAD_UP), "cycle_tick_rate on T and D-pad up (Lesson 02)")
 	_expect(_has_key(&"cycle_stance_tick_rate", KEY_9) and not _has_key(&"cycle_tick_rate", KEY_9), "cycle_stance_tick_rate on 9 (Lesson 14)")
-	_expect(ProjectSettings.get_setting("application/run/main_scene") == "res://scenes/lessons/17_writing_light.tscn", "run/main_scene")
 	var old: Node = (load("res://scenes/lessons/16_crawling_and_scrambling.tscn") as PackedScene).instantiate()
 	_expect(old.get_node_or_null("Shading") == null and old.get_node_or_null("Gallery") == null and old.get_node_or_null("HUD/LightLabel") == null, "Lesson 16 scene has no Shading, Gallery or LightLabel")
 	old.free()
@@ -172,6 +178,17 @@ func _uniform_names(shader: Shader) -> Array:
 	for u in shader.get_shader_uniform_list():
 		names.append(u["name"])
 	return names
+
+
+## True when both materials use one shader and every uniform has the
+## same value in both.
+func _same_parameters(a: ShaderMaterial, b: ShaderMaterial) -> bool:
+	if a.shader != b.shader:
+		return false
+	for name in _uniform_names(a.shader):
+		if a.get_shader_parameter(name) != b.get_shader_parameter(name):
+			return false
+	return true
 
 
 ## A value different from the given one, of the same type. An unset

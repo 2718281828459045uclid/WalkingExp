@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="LightPreset" format=3]
+
+[ext_resource type="Script" path="res://src/render/light_preset.gd" id="1_n51sn"]
+
+[resource]
+script = ExtResource("1_n51sn")
+title = "SDFGI"
+gi = 1

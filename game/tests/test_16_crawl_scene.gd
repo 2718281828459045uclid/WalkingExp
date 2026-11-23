@@ -32,9 +32,9 @@ extends SceneTree
 ##      checks them too); T leaves the tick rate alone, 9 changes it.
 ##   7. Key 4 on the climbing face toggles the Lesson 14 stance and leaves
 ##      the posture; after the climb the posture follows the stance.
-##   8. The Lesson 15 scene has no crawling. (run/main_scene moved to
-##      test_17_light_scene.gd with Lesson 17, as did the input-map checks
-##      of item 6, which this test keeps.)
+##   8. The Lesson 15 scene has no crawling. (The run/main_scene check
+##      moved to test_17_light_scene.gd with Lesson 17; that test repeats
+##      the input-map checks of item 6.)
 ## Run: Godot --headless --path game -s res://tests/test_16_crawl_scene.gd
 
 const ERROR_LIMIT := 0.06

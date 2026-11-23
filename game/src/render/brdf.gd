@@ -271,8 +271,27 @@ static func projected_facet_area(v: Vector3, alpha: float, theta_steps: int = 10
 ##    facet normals h in proportion to D(h)(n.h) (the inverse of its
 ##    cumulative distribution: tan^2(theta_h) = alpha^2 u / (1 - u)), each
 ##    h is turned into the mirror direction l = 2 (v.h) h - v, and each
-##    cell's value is divided by the probability of picking it. For GGX the
-##    quotient simplifies to F G2 (v.h) / ((n.v)(n.h)).
+##    cell's value is divided by the probability of picking it.
+##
+## Q: What is that quotient for GGX?
+## A: Three steps.
+##    1. The density of h: pdf(h) = D(h) (n.h) per unit solid angle of h.
+##       It integrates to 1 (Lesson 17 P4), so it is a probability density.
+##    2. The density of l: the mirror doubles angles, so a cone of normals
+##       d omega_h becomes a cone of directions d omega_l = 4 (v.h) d omega_h
+##       (P5 a), and pdf(l) = D(h) (n.h) / (4 (v.h)).
+##    3. The integrand: f cos(theta_l) = D G2 F / (4 (n.l)(n.v)) * (n.l)
+##       = D G2 F / (4 (n.v)).
+##    Integrand / pdf(l) = F G2 (v.h) / ((n.v)(n.h)): D and the 4 cancel.
+##    Every cell has the same probability, so the integral is the mean of
+##    this quotient over all cells.
+##
+## Q: How many cells are enough?
+## A: The defaults (256 x 128) give four digits for the rough lobes of this
+##    lesson (roughness 0.92 and 1) up to a view angle of 60 degrees. A
+##    narrow lobe seen at a grazing angle needs many more cells in u:
+##    at roughness 0.5 and 80 degrees the defaults give 0.8593, against
+##    0.8556 with 65 536 x 512 cells (README section 3.5).
 static func ggx_specular_albedo(v: Vector3, roughness: float, f0: float = 1.0, u_steps: int = 256, phi_steps: int = 128) -> float:
 	var n := Vector3.UP
 	var alpha := roughness * roughness

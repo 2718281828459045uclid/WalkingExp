@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="LightPreset" format=3]
+
+[ext_resource type="Script" path="res://src/render/light_preset.gd" id="1_63wyk"]
+
+[resource]
+script = ExtResource("1_63wyk")
+title = "hard filter"
+filter_quality = 0

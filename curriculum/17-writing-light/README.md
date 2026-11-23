@@ -35,13 +35,13 @@ Files:
 | `game/tests/test_17_light_pixels.gd` | In a window: Godot's conventions and every model against `Brdf.reflected()`, pixel by pixel. Headless it prints "skipped". |
 | `docs/decisions/0017-custom-light-by-shader-include.md` | Why `light()` is an include appended to existing shaders, why built-in and custom are separate materials, why include paths are allowed in code. |
 
-Controls: **F5** steps the terrain, the boulder pile and the climbing face through built-in → Lambert → wrap → Oren–Nayar → GGX → built-in. **F6** shows diffuse and specular, diffuse only, or specular only, on every custom material (the four custom gallery columns included). **F7** switches the HUD between this lesson's label and the labels of Lessons 01–16, which cover most of a 1280 × 720 window. No gamepad button is free; the three keys have none. Every key of Lessons 01–16 still works (Tab, V, C on the terrain, U on the rocks), and its setting survives an F5.
+Controls, in the running game (in the editor, F5 and F6 run scenes, as stated at the top): **F5** steps the terrain, the boulder pile and the climbing face through built-in → Lambert → wrap → Oren–Nayar → GGX → built-in. **F6** shows diffuse and specular, diffuse only, or specular only, on every custom material (the four custom gallery columns included). **F7** switches the HUD between this lesson's label and the labels of Lessons 01–16, which cover most of a 1280 × 720 window. No gamepad button is free; the three keys have none. Every key of Lessons 01–16 still works (Tab, V, C on the terrain, U on the rocks), and its setting survives an F5.
 
 The `CrawlGap`, the `Slab` and the `StepRow` share the terrain's material but are not switched: they rebuild their meshes and collision when their `material` changes (decision 0017). They keep the built-in light, as a reference beside the switched terrain.
 
 The HUD label (bottom left) has three lines: the mode and the term; the sun's elevation (27°) and, for the ground under the player, N·L and N·V (V toward the camera); and the value π f cos θ_l of each model for a white surface with that normal, that sun and that view: the brightness each model gives that patch of ground per unit of sun energy, before albedo. `Brdf` computes the line on the CPU.
 
-The gallery stands at (12, 2.57, 37.5), about 5 m from the spawn, turned 26° about the vertical so that the sun, 27° above the horizon, comes from the exact left of a viewer who faces it. The climbing face (Lesson 15), the gap and the slab (Lesson 16) are where they were; the player starts beside the gallery instead of at (0, 40).
+The `Gallery` node stands at (12, 0, 37.5), about 5 m from the spawn; its five columns stand 2.57 m above it (`row_height()`, section 3.8). The node is turned 26° about the vertical so that the sun, 27° above the horizon, comes from the exact left of a viewer who faces it. The climbing face (Lesson 15), the gap and the slab (Lesson 16) are where they were; the player starts beside the gallery instead of at (0, 40).
 
 Reading:
 
@@ -115,7 +115,7 @@ The documentation describes some of these rules and not others; the lesson does 
 | `light(): DIFFUSE_LIGHT += vec3(LIGHT_IS_DIRECTIONAL ? 0.2 : 0.05)` | 0.1999 | the sun is directional |
 | no `light()`, `render_mode diffuse_lambert, specular_disabled`, ALBEDO 0.5 | 0.2500 | built-in Lambert = 0.5 × 1 × 0.5 |
 | no `light()`, `render_mode specular_disabled` (no diffuse mode named) | 0.2500 | Godot 4.6's default diffuse is Lambert (identical on all 24 quads of the pixel test) |
-| `render_mode diffuse_burley, specular_disabled`, roughness 1 / 0.5 | 0.2651 / 0.2542 | Burley is a separate mode |
+| `render_mode diffuse_burley, specular_disabled`, roughness 1 / 0.5, camera 2000 m above the quad | 0.2578 / 0.2520 | Burley is a separate mode; it depends on the view direction (below) |
 | `render_mode diffuse_lambert_wrap`, roughness 0.5 | 0.2222 | the engine's own wrap mode (exercise E1) |
 | `light(): DIFFUSE_LIGHT += LIGHT_COLOR * ATTENUATION * max(dot(NORMAL, LIGHT), 0.0) / PI`, ALBEDO 0.5 | 0.2500 | the custom Lambert equals the built-in |
 | empty `light()`, ALBEDO 0.5, ambient color 0.2 (sRGB), light on | 0.01654 | ambient alone; the same value as the built-in shader with the light hidden |
@@ -123,6 +123,8 @@ The documentation describes some of these rules and not others; the lesson does 
 Two consequences shape the code. The custom diffuse terms leave out ρ, because Godot multiplies by `ALBEDO` afterward. And the 1/π of every diffuse BRDF stays in the formulas, because `LIGHT_COLOR` carries π: a white surface facing a light of energy 1 shows 1. The energy slider then means "the brightness of a white wall facing the light".
 
 One more measurement explains a line of the pixel test: with the camera 10 m above the quads the custom Oren–Nayar and GGX pixels differed from the CPU formulas by up to 0.34; with the camera 2000 m above, by at most 0.0005. Godot computes `VIEW` from the pixel's position relative to the camera, also for an orthographic camera.
+
+The Burley row shows the same effect. Godot's Burley code (the shader source stored in the Godot binary) is (1/π) F_D(v) F_D(l) N·L with F_D(s) = 1 + (2 (l·h)² r − 0.5)(1 − n·s)⁵, r the roughness. With the camera above the quad, N·V = 1, N·L = 0.5, l·h = cos 30° and albedo 0.5, this is 0.25 (1 + (1.5 r − 0.5)/32): 0.2578 at r = 1 and 0.2520 at r = 0.5, the measured values. For the other rows the camera stood 5 m above a point 6.5 m and 5.5 m to the side of the two Burley quads; seen from there, at N·V 0.61 and 0.67 and from the side of the light, they read 0.2651 and 0.2542. The other rows of the table do not depend on v.
 
 ### 3.3 `brdf.gdshaderinc`
 
@@ -151,9 +153,9 @@ The integrals:
 - `directional_albedo()` sums f · cos over a grid of equal steps in μ = cos θ and in φ. Read the comment on d ω = dμ dφ: equal steps in μ give cells of equal solid angle, so the midpoint rule needs no weights. `mu_min = −1` integrates over the whole sphere (for wrap lighting).
 - `ggx_normalization()` integrates D (n·h) over θ alone, because D does not depend on φ.
 - `projected_facet_area()` integrates max(0, v·h) D(h); the result divided by cos θ_v must be 1 + Λ(v). This checks the Λ formula against the distribution it belongs to.
-- `ggx_specular_albedo()` does not use an even grid: a smooth surface reflects into a lobe a few degrees wide. The grid is laid over facet normals in proportion to D (n·h), and the value of each cell is divided by the probability of picking it. Follow the derivation in the comment to the quotient F G2 (v·h)/((n·v)(n·h)).
+- `ggx_specular_albedo()` does not use an even grid: a smooth surface reflects into a lobe a few degrees wide. The grid is laid over facet normals in proportion to D (n·h), and the value of each cell is divided by the probability of picking it. Follow the three steps in the comment to the quotient F G2 (v·h)/((n·v)(n·h)).
 
-Measured with these functions (256 × 256 cells in μ and φ; the GGX lobe alone with 256 × 128 importance-sampled cells):
+Measured with these functions (256 × 256 cells in μ and φ; the GGX lobe alone with 65 536 × 512 importance-sampled cells):
 
 | Model | E(v) at θ_v = 0°, 30°, 60°, 80° |
 |---|---|
@@ -162,13 +164,17 @@ Measured with these functions (256 × 256 cells in μ and φ; the GGX lobe alone
 | Oren–Nayar σ = 30° | 0.7731, 0.8143, 0.8741, 0.9215 |
 | Oren–Nayar σ = 45° | 0.6743, 0.7220, 0.7913, 0.8463 |
 | Oren–Nayar σ = 60° | 0.6157, 0.6662, 0.7396, 0.7979 |
-| GGX specular alone, f0 = 1, roughness 0.2 | 0.9998, 0.9985, 0.9954, 0.9663 |
-| roughness 0.5 | 0.9159, 0.9041, 0.8574, 0.8593 |
-| roughness 0.92 (the rock) | 0.3953, 0.4188, 0.5181, 0.7097 |
-| roughness 1 | 0.3069, 0.3352, 0.4507, 0.6683 |
+| GGX specular alone, f0 = 1, roughness 0.2 | 0.9983, 0.9980, 0.9955, 0.9681 |
+| roughness 0.5 | 0.9158, 0.9041, 0.8573, 0.8556 |
+| roughness 0.92 (the rock) | 0.3953, 0.4188, 0.5181, 0.7099 |
+| roughness 1 | 0.3069, 0.3352, 0.4507, 0.6682 |
 | Lambert ρ = 1 + GGX, roughness 0.92, f0 0.04 | 1.0159 (0°), 1.0247 (60°), 1.0485 (80°) |
 
-The GGX distribution integrates to 1.000031, 1.000005, 1.000001 for α = 0.02, 0.05, 0.1 (4096 steps in θ) and to 1.000000 for α = 0.3, 0.6, 1. The projected facet area matches 1 + Λ within 1e-4 for α = 0.1, 0.5, 1 at θ_v = 0°, 60°, 85°. A plain 512 × 256 grid and the importance-sampled grid give the same GGX albedo to four digits (0.3953 at 0°, 0.5181 at 60°, roughness 0.92). Each `directional_albedo()` call of 65 536 cells took about 50 ms headless.
+The GGX distribution integrates to 1.000031, 1.000005, 1.000001 for α = 0.02, 0.05, 0.1 (4096 steps in θ) and to 1.000000 for α = 0.3, 0.6, 1. The projected facet area matches 1 + Λ within 1e-4 for α = 0.1, 0.5, 1 at θ_v = 0°, 60°, 85°. A plain 512 × 256 grid and the importance-sampled grid give the same GGX albedo to four digits (0.3953 at 0°, 0.5181 at 60°, roughness 0.92). A scratch computation (not in the repository) on a plain grid over (θ_h, φ) of 8192 × 4096 cells, weighted by D (n·h) sin θ_h, gave every GGX row of the table to the digits shown.
+
+The default of `ggx_specular_albedo()`, 256 × 128 cells, is not enough everywhere. It gives the rows for roughness 0.92 and 1 to four digits up to 60° and differs by at most 0.0002 at 80°; at roughness 0.2 and 0.5 it differs by up to 0.004, and at roughness 0.5 it shows the albedo rising from 60° to 80° (0.8574 to 0.8593), where the converged values fall (0.8573 to 0.8556). A narrow lobe seen at a grazing angle needs many more cells; repeat a value at four times the cells before you trust its last digit (E3).
+
+Each `directional_albedo()` call of 65 536 cells took, headless, about 50 ms for Lambert and wrap, 85 ms for Oren–Nayar and 120 ms for Lambert + GGX.
 
 ### 3.6 `lit_shader.gd`
 
@@ -184,7 +190,7 @@ Targets need a `material` property whose setter only assigns the mesh's `materia
 
 ### 3.8 `shading_gallery.gd`
 
-A `@tool` script, so the gallery appears in the editor. `rebuild()` makes five columns. Each column has a `Terrain` (Lesson 01) of 2.4 m with the rippled `gallery_tile_field.tres`, a box (plinth) under it, a rock, a label, and its two materials: the originals in column 0, lit copies with `light_model` 0–3 in columns 1–4. The rock is meshed once, by a `CurvatureMesher` (Lesson 09) in column 0, so its weathering colors appear; columns 1–4 show the same mesh. One trimesh collision shape serves all five rocks.
+A `@tool` script, so the gallery appears in the editor. `rebuild()` makes five columns. Each column has a `Terrain` (Lesson 01) of 2.4 m with the rippled `gallery_tile_field.tres`, a box (plinth) under it, a rock, a label, and its two materials: plain copies of the originals in column 0, lit copies with `light_model` 0–3 in columns 1–4. Column 0 does not share the originals with the scene: the keys of earlier lessons (Tab, V, C, U) write to the materials the terrain and the rocks show, and a column that shared them would change while the other four did not. The rock is meshed once, by a `CurvatureMesher` (Lesson 09) in column 0, so its weathering colors appear; columns 1–4 show the same mesh. One trimesh collision shape serves all five rocks.
 
 `row_height()` puts the whole row at the highest terrain point under any tile. Read its second question: the Lesson 03 ground material colors by world height and draws contour lines at whole meters, so columns at different heights would differ for a reason unrelated to light. `plinth_height()` reaches 0.3 m below the lowest terrain point under each tile. The noise of the ground material is sampled in world space, so the five tiles show different noise patches; the rock material has no noise, and the five rocks are identical.
 
@@ -204,7 +210,7 @@ Measured: the gallery builds in 414 ms headless (the rock: 1594 vertices, 3184 t
 
 Open `scenes/lessons/17_writing_light.tscn` and press F6. The gallery stands ahead; the sun is 27° up, on the left. Measurements below were read from screenshots (screen values 0–255, after AgX tonemapping), with a camera 9 m in front of the middle column and 4 m above it unless stated; "lit side" means rock points with N·L ≥ 0.6, "terminator" N·L in [−0.1, 0.1).
 
-- **O1. The gallery.** Compare the five rocks. Which column differs most from Lambert, and on which part of the rock? Which column is darker than Lambert everywhere? Which two columns can you not tell apart? Then compare the front faces of the plinths, which face the camera and are parallel to the sun's direction (N·L = 0).
+- **O1. The gallery.** Compare the five rocks. Which column differs most from Lambert, and on which part of the rock? Which column is darker than Lambert on the sunlit side of the rock, and why do the two agree on the dark side? Which columns can you not tell apart? Then compare the front faces of the plinths, which face the camera and are parallel to the sun's direction (N·L = 0).
 - **O2. F5 on the scene.** Look at the ground in front of the gallery and at the boulder pile behind it while pressing F5. Order the five modes from darkest to brightest ground. Then look at the `Slab` and the `CrawlGap` (around x = −7 to −16, z = 52): do they change?
 - **O3. F6, specular only.** Press F6 twice. What remains on the four custom columns, and what is the brightest custom column now? Why does the built-in column not change?
 - **O4. Walk around.** Walk to the far side of the gallery, so that the sun is ahead of you and to the right. Compare the GGX column with the Lambert column again, on the rocks and on the tiles. Then return.
@@ -328,7 +334,7 @@ Measured (mean screen value of rock points in each N·L range, at the same surfa
 | −0.4 to −0.1 | 99.6 | 98.9 | 114.2 | 99.3 | 100.0 |
 | < −0.4 | 95.6 | 95.1 | 95.3 | 94.3 | 92.0 |
 
-Wrap differs most, at and past the terminator: 142.6 against 107.4, where Lambert has only the ambient light. The dark side starts 30° later (P2 a), so the shadow edge moves around the rock and softens. Oren–Nayar is darker than Lambert on the lit side (134.8 against 143.3), as A = 0.77 predicts for a sun from the side, where the B term contributes little. Built-in, Lambert and GGX are within 2.5 of each other: the rock's GGX lobe is wide and weak (roughness 0.92, f0 0.04). The plinths' front faces (N·L = 0): Lambert 58.3, wrap 82.7, the other three 62–64.
+Wrap differs most, at and past the terminator: 142.6 against 107.4, where Lambert has only the ambient light. The dark side starts 30° later (P2 a), so the shadow edge moves around the rock and softens. Oren–Nayar is darker than Lambert on the lit side (134.8 against 143.3), as A = 0.77 predicts for a sun from the side, where the B term contributes little. Where N·L ≤ 0 both add no direct light (`oren_nayar_cosine()` and `lambert_cosine()` return 0), so both show the ambient light alone; their values there differ by less than 1. Built-in, Lambert and GGX are within 2.5 of each other except below N·L = −0.4 (O5): the rock's GGX lobe is wide and weak (roughness 0.92, f0 0.04). The plinths' front faces (N·L = 0): Lambert 58.3, wrap 82.7, the other three 62–64. At N·L = 0 only wrap adds direct light; the differences among the other four come from the world-space noise of the ground material (section 3.8, T1), not from the models.
 
 Below N·L = −0.4 even wrap is dark: (−0.4 + 0.5)/1.5 = 0.07 at most, and part of that region lies in the rock's own shadow (`ATTENUATION`). On the tiles, points in the rocks' shadows read 55.0–56.7 in all five columns, against 80.1–91.1 in the sun (measured with the ground noise set to zero in the harness, so that the five tiles are identical): `ATTENUATION` carries the shadow into every model.
 </details>
@@ -340,7 +346,7 @@ Mean screen value of the ground in the lower left of the start view: built-in 93
 
 <details><summary>O3</summary>
 
-Specular only: the four custom columns lose their direct diffuse light and keep the ambient light and the sky reflection, which do not pass through `light()`. The lit side of the rock reads 82.1–82.6 in the Lambert, wrap and Oren–Nayar columns (no specular term) and 87.6 in the GGX column: the specular lobe adds about 5. On the tiles, sunlit points read 52.4–53.1 against 59.9 for GGX. The built-in column stays at 145.0: it uses the original material, which has no `light_term` uniform; F6 acts on `light()`, and the built-in material has none.
+Specular only: the four custom columns lose their direct diffuse light and keep the ambient light and the sky reflection, which do not pass through `light()`. The lit side of the rock reads 82.1–82.6 in the Lambert, wrap and Oren–Nayar columns (no specular term) and 87.6 in the GGX column: the specular lobe adds about 5. On the tiles, sunlit points read 52.4–53.1 against 59.9 for GGX. The built-in column stays at 145.0: it uses a plain copy of the original material, which has no `light_term` uniform; F6 acts on `light()`, and the built-in material has none.
 </details>
 
 <details><summary>O4</summary>
@@ -350,7 +356,7 @@ From the far side, with the sun ahead and to the right: rock lit side, Lambert 1
 
 <details><summary>O5</summary>
 
-On the rock, the built-in and the GGX column agree within 1.1 on every N·L range of O1 except the darkest (where the two columns are seen from different angles and the sky reflection differs): both use f0 = 0.04 (the rock writes no `SPECULAR`, so 0.16 · 0.5² = 0.04), and their G terms differ little at this roughness. The pixel test measured the two G terms: with Godot's built-in GGX and the custom one on quads tilted up to 75°, the whole pixel differed by at most 0.36 % (roughness 0.5) and 0.23 % (0.92); the specular term alone by up to 21 % and 4.9 %, at the steepest quads, where Hammon's approximation and the exact height-correlated G2 differ most.
+On the rock, the built-in and the GGX column agree within 1.1 on every N·L range of O1 except the darkest (where the two columns are seen from different angles and the sky reflection differs): both use f0 = 0.04 (the rock writes no `SPECULAR`, so 0.16 · 0.5² = 0.04), and their G terms differ little at this roughness. A scratch harness with the setup of the pixel test (section 3.2) measured the two G terms: with Godot's built-in GGX and the custom one on quads tilted up to 75°, the whole pixel differed by at most 0.36 % (roughness 0.5) and 0.23 % (0.92); the specular term alone by up to 21 % and 4.9 %, at the steepest quads, where Hammon's approximation and the exact height-correlated G2 differ most.
 
 On the ground they disagree: the terrain writes `SPECULAR = 0.3`, so the built-in light uses f0 = 0.16 · 0.3² = 0.0144, while `light_f0` is 0.04. Ground in the start view: built-in 93.2, GGX 96.8. On the tiles, sunlit points: built-in 87.2, GGX 88.0, Lambert 83.2. Setting `light_f0` to 0.0144 on the lit terrain material would give the built-in reflectance at normal incidence; toward grazing angles the built-in code also lowers Fresnel's limit from 1 to 50 f0 = 0.72 (an approximate specular occlusion), which the Schlick form here does not. `light()` cannot read `SPECULAR` (section 3.1).
 </details>

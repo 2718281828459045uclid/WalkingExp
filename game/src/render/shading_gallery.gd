@@ -22,7 +22,10 @@ extends Node3D
 ## A: Two images seen one after the other are compared from memory; two
 ##    images side by side are compared by the eye at once. Each column
 ##    has the same geometry, the same material values and the same light;
-##    only light() differs.
+##    only light() differs. Every column has its own copies of the two
+##    materials (rebuild()), so keys of earlier lessons, which write to the
+##    materials the scene's terrain and rocks show, leave the five columns
+##    alike.
 ##
 ## Generated nodes are internal children (Lesson 01 rule), rebuilt when
 ## the scene loads; nothing of them is saved in the .tscn file.
@@ -136,7 +139,6 @@ func rebuild() -> void:
 	var mesher := CurvatureMesher.new()
 	mesher.shape = rock_shape
 	mesher.cell_size = rock_cell_size
-	mesher.material = rock_material
 	mesher.build_collision = false
 
 	for i in ShadingSwitch.Mode.size():
@@ -147,11 +149,19 @@ func rebuild() -> void:
 		_add_internal(self, column.root)
 
 		# Q: Which materials does a column use?
-		# A: Column 0 (built-in) uses the originals. Columns 1-4 use lit
-		#    copies, one per column, so each can hold its own light_model.
-		column.tile_material = tile_material
-		column.rock_material = rock_material
-		if i != ShadingSwitch.Mode.BUILT_IN:
+		# A: Column 0 (built-in) uses plain copies of the originals.
+		#    Columns 1-4 use lit copies, one per column, so each can hold
+		#    its own light_model.
+		#
+		# Q: Why not the originals themselves in column 0?
+		# A: The scene's Terrain and rocks show the originals, and the keys
+		#    of earlier lessons (Tab, V, C, U) change uniforms of the
+		#    material on screen. Column 0 would follow those keys and
+		#    columns 1-4 would not.
+		if i == ShadingSwitch.Mode.BUILT_IN:
+			column.tile_material = tile_material.duplicate() as ShaderMaterial
+			column.rock_material = rock_material.duplicate() as ShaderMaterial
+		else:
 			column.tile_material = LitShader.material(tile_material, light_include)
 			column.rock_material = LitShader.material(rock_material, light_include)
 			for lit in [column.tile_material, column.rock_material]:
@@ -190,6 +200,7 @@ func rebuild() -> void:
 		# The rock stands on the tile's center, 0.05 m into it.
 		var rock_y := tile_field.height(Vector2.ZERO) - 0.05
 		if i == 0:
+			mesher.material = column.rock_material
 			mesher.position.y = rock_y
 			_add_internal(column.root, mesher)
 			rock_mesh = _mesh_of(mesher)

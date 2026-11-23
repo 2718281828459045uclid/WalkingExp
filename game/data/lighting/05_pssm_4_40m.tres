@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="LightPreset" format=3]
+
+[ext_resource type="Script" path="res://src/render/light_preset.gd" id="1_6gkhw"]
+
+[resource]
+script = ExtResource("1_6gkhw")
+title = "PSSM 4, 40 m"
+max_distance = 40.0
