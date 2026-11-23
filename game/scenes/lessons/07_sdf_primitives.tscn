@@ -1,0 +1,136 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/lessons/sdf_primitives.gd" id="1_lesson"]
+[ext_resource type="Script" path="res://src/terrain/terrain.gd" id="2_terrain"]
+[ext_resource type="Resource" path="res://data/terrain/sandbox_height_field.tres" id="3_field"]
+[ext_resource type="Material" path="res://data/terrain/painted_terrain_material.tres" id="4_material"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="5_player"]
+[ext_resource type="Material" path="res://data/debug/color_ramp_material.tres" id="6_ramp"]
+[ext_resource type="Script" path="res://src/audio/player_state_reporter.gd" id="90_reporter"]
+[ext_resource type="Script" path="res://src/audio/footstep_reporter.gd" id="91_footsteps"]
+[ext_resource type="Script" path="res://src/audio/sound_emitter.gd" id="92_emitter"]
+[ext_resource type="Script" path="res://src/audio/spatial_audio_reporter.gd" id="93_spatial"]
+
+[ext_resource type="Script" path="res://src/sdf/sdf_slice.gd" id="94_slice"]
+[ext_resource type="Resource" path="res://data/rocks/boulder_pile.tres" id="95_pile"]
+[ext_resource type="Material" path="res://data/debug/sdf_slice_material.tres" id="96_slice_material"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_horizon_color = Color(0.72, 0.68, 0.62, 1)
+ground_bottom_color = Color(0.5, 0.46, 0.4, 1)
+ground_horizon_color = Color(0.72, 0.68, 0.62, 1)
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+tonemap_mode = 4
+tonemap_white = 6.0
+fog_enabled = true
+fog_light_color = Color(0.72, 0.68, 0.62, 1)
+fog_density = 0.004
+fog_sky_affect = 0.0
+
+[sub_resource type="QuadMesh" id="QuadMesh_strip"]
+size = Vector2(4, 1.5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0, 0, 0, 0.6)
+
+[node name="SdfPrimitives" type="Node3D"]
+script = ExtResource("1_lesson")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.43837115, 0.40804398, -0.8008314, 0, 0.8910065, 0.45399052, 0.89879405, -0.19901635, 0.39059156, 0, 40, 0)
+light_color = Color(1, 0.94, 0.85, 1)
+shadow_enabled = true
+directional_shadow_max_distance = 120.0
+
+[node name="Terrain" type="Node3D" parent="."]
+script = ExtResource("2_terrain")
+field = ExtResource("3_field")
+material = ExtResource("4_material")
+
+[node name="ColorStrip" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 33)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_strip")
+surface_material_override/0 = ExtResource("6_ramp")
+
+[node name="Player" parent="." instance=ExtResource("5_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 40)
+
+[node name="StateReporter" type="Node" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("90_reporter")
+player = NodePath("../Player")
+
+[node name="Footsteps" type="Node" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("91_footsteps")
+player = NodePath("../Player")
+surface_material = ExtResource("4_material")
+
+[node name="Emitters" type="Node3D" parent="."]
+
+[node name="Crickets" type="Node3D" parent="Emitters"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 3.5, 30)
+script = ExtResource("92_emitter")
+kind = &"crickets"
+
+[node name="BirdEast" type="Node3D" parent="Emitters"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 8.75, 20)
+script = ExtResource("92_emitter")
+emitter_id = 1
+kind = &"bird"
+amp = 0.25
+
+[node name="BirdNorth" type="Node3D" parent="Emitters"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 5.6, -35)
+script = ExtResource("92_emitter")
+emitter_id = 2
+kind = &"bird"
+amp = 0.25
+
+[node name="SpatialReporter" type="Node" parent="." node_paths=PackedStringArray("listener", "player", "emitters_root")]
+script = ExtResource("93_spatial")
+listener = NodePath("../Player/CameraPivot/SpringArm3D/Camera3D")
+player = NodePath("../Player")
+emitters_root = NodePath("../Emitters")
+
+[node name="Rocks" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 30)
+
+[node name="SliceHorizontal" type="Node3D" parent="Rocks"]
+script = ExtResource("94_slice")
+shape = ExtResource("95_pile")
+slice_material = ExtResource("96_slice_material")
+origin = Vector3(1.5, 1.25, 0.3)
+size = Vector2(10, 7)
+
+[node name="SliceVertical" type="Node3D" parent="Rocks"]
+script = ExtResource("94_slice")
+shape = ExtResource("95_pile")
+slice_material = ExtResource("96_slice_material")
+axis = 2
+origin = Vector3(1.5, 2, 0.3)
+size = Vector2(10, 5)
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 416.0
+offset_bottom = 216.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_styles/normal = SubResource("StyleBoxFlat_hud")
+text = "view: lit"

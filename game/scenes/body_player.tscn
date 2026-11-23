@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
+[ext_resource type="Script" path="res://src/body/body_player.gd" id="2_body_player"]
+[ext_resource type="Script" path="res://src/body/body_rig.gd" id="3_rig"]
+[ext_resource type="Resource" path="res://data/body/default_proportions.tres" id="4_proportions"]
+[ext_resource type="Resource" path="res://data/body/placeholder_walk.tres" id="5_walk"]
+[ext_resource type="Material" path="res://data/body/body_material.tres" id="6_material"]
+
+[node name="BodyPlayer" instance=ExtResource("1_player")]
+script = ExtResource("2_body_player")
+
+[node name="Capsule" parent="BodyMesh" index="0"]
+visible = false
+
+[node name="Nose" parent="BodyMesh" index="1"]
+visible = false
+
+[node name="Rig" type="Node3D" parent="BodyMesh" index="2"]
+script = ExtResource("3_rig")
+proportions = ExtResource("4_proportions")
+walk_cycle = ExtResource("5_walk")
+material = ExtResource("6_material")

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="SdfRepeat" format=3]
+
+[ext_resource type="Script" path="res://src/sdf/sdf_repeat.gd" id="1_repeat"]
+[ext_resource type="Resource" path="res://data/rocks/tor_boulder.tres" id="2_tor"]
+
+[resource]
+script = ExtResource("1_repeat")
+shape = ExtResource("2_tor")
+period = Vector3(6, 0, 5)
+count = Vector3i(1, 0, 1)

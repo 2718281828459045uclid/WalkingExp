@@ -1,0 +1,30 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/terrain_painted.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" path="res://data/terrain/ground_noise.tres" id="2_noise"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/debug_view = 0
+shader_parameter/paint_view = 0
+shader_parameter/grass_color = Color(0.33, 0.4, 0.2, 1)
+shader_parameter/dirt_color = Color(0.5, 0.4, 0.28, 1)
+shader_parameter/rock_color = Color(0.52, 0.49, 0.46, 1)
+shader_parameter/rock_angle_start = 22.0
+shader_parameter/rock_angle_end = 32.0
+shader_parameter/dirt_height = 1.0
+shader_parameter/dirt_blend_meters = 3.0
+shader_parameter/rock_breakup_degrees = 8.0
+shader_parameter/dirt_breakup_meters = 1.5
+shader_parameter/ground_noise = ExtResource("2_noise")
+shader_parameter/noise_scale_meters = 24.0
+shader_parameter/rock_noise_scale_meters = 3.0
+shader_parameter/color_variation = 0.3
+shader_parameter/triplanar_sharpness = 4.0
+shader_parameter/show_contours = true
+shader_parameter/contour_interval = 1.0
+shader_parameter/index_every = 5
+shader_parameter/contour_width_pixels = 1.0
+shader_parameter/contour_color = Color(0.2, 0.13, 0.08, 1)
+shader_parameter/contour_opacity = 0.7

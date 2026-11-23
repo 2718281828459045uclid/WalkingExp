@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SdfUnion" format=3]
+
+[ext_resource type="Script" path="res://src/sdf/sdf_union.gd" id="1_yrpdt"]
+[ext_resource type="Script" path="res://src/sdf/sdf_shape.gd" id="2_pr7in"]
+[ext_resource type="Script" path="res://src/sdf/sdf_transform.gd" id="3_qlgam"]
+[ext_resource type="Resource" path="res://data/rocks/tor_boulder.tres" id="4_a60wq"]
+[ext_resource type="Resource" path="res://data/rocks/split_boulder.tres" id="5_bx38x"]
+
+[sub_resource type="Resource" id="Resource_gsn4c"]
+script = ExtResource("3_qlgam")
+shape = ExtResource("4_a60wq")
+
+[sub_resource type="Resource" id="Resource_1e6kb"]
+script = ExtResource("3_qlgam")
+shape = ExtResource("5_bx38x")
+translation = Vector3(3.6, 0, 0.8)
+rotation_degrees = Vector3(0, 40, 0)
+scale = 0.85
+
+[sub_resource type="Resource" id="Resource_n1jp7"]
+script = ExtResource("3_qlgam")
+shape = ExtResource("4_a60wq")
+translation = Vector3(0.4, 2.35, -0.2)
+rotation_degrees = Vector3(0, 110, 0)
+scale = 0.5
+
+[resource]
+script = ExtResource("1_yrpdt")
+shapes = Array[ExtResource("2_pr7in")]([SubResource("Resource_gsn4c"), SubResource("Resource_1e6kb"), SubResource("Resource_n1jp7")])

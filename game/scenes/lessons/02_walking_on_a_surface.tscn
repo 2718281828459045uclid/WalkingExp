@@ -1,0 +1,76 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/lessons/walking_on_a_surface.gd" id="1_lesson"]
+[ext_resource type="Script" path="res://src/terrain/terrain.gd" id="2_terrain"]
+[ext_resource type="Resource" path="res://data/terrain/steep_height_field.tres" id="3_field"]
+[ext_resource type="Material" path="res://data/terrain/terrain_material.tres" id="4_material"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="5_player"]
+[ext_resource type="Resource" path="res://data/input/walk_stick_response.tres" id="6_stick"]
+[ext_resource type="Script" path="res://src/world/ramp_tower.gd" id="7_ramps"]
+[ext_resource type="Script" path="res://src/world/step_row.gd" id="8_steps"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_horizon_color = Color(0.72, 0.68, 0.62, 1)
+ground_bottom_color = Color(0.5, 0.46, 0.4, 1)
+ground_horizon_color = Color(0.72, 0.68, 0.62, 1)
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+tonemap_mode = 4
+fog_enabled = true
+fog_light_color = Color(0.72, 0.68, 0.62, 1)
+fog_density = 0.004
+fog_sky_affect = 0.0
+
+[node name="WalkingOnASurface" type="Node3D"]
+script = ExtResource("1_lesson")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.43837115, 0.40804398, -0.8008314, 0, 0.8910065, 0.45399052, 0.89879405, -0.19901635, 0.39059156, 0, 40, 0)
+light_color = Color(1, 0.94, 0.85, 1)
+shadow_enabled = true
+directional_shadow_max_distance = 120.0
+
+[node name="Terrain" type="Node3D" parent="."]
+script = ExtResource("2_terrain")
+field = ExtResource("3_field")
+material = ExtResource("4_material")
+
+[node name="RampTower" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 40)
+script = ExtResource("7_ramps")
+material = ExtResource("4_material")
+
+[node name="StepRow" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 50)
+script = ExtResource("8_steps")
+material = ExtResource("4_material")
+
+[node name="Player" parent="." instance=ExtResource("5_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 54)
+stick_response = ExtResource("6_stick")
+steep_slide = true
+look_ahead_distance = 4.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="HUD"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -256.0
+offset_right = 416.0
+offset_bottom = -16.0
+grow_vertical = 0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+text = "view: lit"
+vertical_alignment = 2

@@ -1,0 +1,17 @@
+# Godot: editor cache and imported-resource cache. Regenerated on open.
+game/.godot/
+
+# macOS
+.DS_Store
+
+# Ableton Live: per-project backups and sample analysis files
+art-source/ableton/**/Backup/
+*.asd
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# SuperCollider recordings (render to art-source/ explicitly if a take is kept)
+audio/supercollider/recordings/

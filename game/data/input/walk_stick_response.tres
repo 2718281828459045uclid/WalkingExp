@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="StickResponse" format=3]
+
+[ext_resource type="Script" path="res://src/input/stick_response.gd" id="1_6c15w"]
+
+[resource]
+script = ExtResource("1_6c15w")
+inner_deadzone = 0.12
+outer_deadzone = 0.95
+exponent = 1.6

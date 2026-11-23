@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="HeightField" format=3]
+
+[ext_resource type="Script" path="res://src/terrain/height_field.gd" id="1_field"]
+
+[resource]
+script = ExtResource("1_field")
+tilt = Vector2(0.04, -0.02)
+mound_height = 12.0
+mound_radius = 22.0
+ripple_amplitude = 1.4
+ripple_wavelength = Vector2(23, 17)

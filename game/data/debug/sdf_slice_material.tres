@@ -1,0 +1,13 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/sdf_slice.gdshader" id="1_r6e6k"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_r6e6k")
+shader_parameter/view = null
+shader_parameter/band_meters = null
+shader_parameter/outside_color = null
+shader_parameter/inside_color = null
+shader_parameter/zero_line_color = null
+shader_parameter/line_pixels = null

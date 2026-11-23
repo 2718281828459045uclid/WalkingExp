@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AxialStickResponse" format=3]
+
+[ext_resource type="Script" path="res://src/input/axial_stick_response.gd" id="1_axial"]
+
+[resource]
+script = ExtResource("1_axial")
+inner_deadzone = 0.12
+outer_deadzone = 0.95
+exponent = 1.6

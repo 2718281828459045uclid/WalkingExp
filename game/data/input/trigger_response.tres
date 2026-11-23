@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TriggerResponse" format=3]
+
+[ext_resource type="Script" path="res://src/input/trigger_response.gd" id="1_trigger"]
+[ext_resource type="Curve" path="res://data/input/trigger_curve.tres" id="2_curve"]
+
+[resource]
+script = ExtResource("1_trigger")
+inner_deadzone = 0.05
+outer_deadzone = 0.95
+curve = ExtResource("2_curve")

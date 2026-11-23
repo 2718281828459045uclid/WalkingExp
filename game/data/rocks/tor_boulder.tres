@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SdfDisplace" format=3]
+
+[ext_resource type="FastNoiseLite" path="res://data/rocks/granite_noise.tres" id="1_4g5wb"]
+[ext_resource type="Script" path="res://src/sdf/sdf_displace.gd" id="2_p5ody"]
+[ext_resource type="Script" path="res://src/sdf/sdf_smooth_union.gd" id="3_cgtdb"]
+[ext_resource type="Script" path="res://src/sdf/sdf_shape.gd" id="4_lkt61"]
+[ext_resource type="Script" path="res://src/sdf/sdf_ellipsoid.gd" id="5_xk2yq"]
+
+[sub_resource type="Resource" id="Resource_3jkvo"]
+script = ExtResource("5_xk2yq")
+center = Vector3(0, 1, 0)
+radii = Vector3(1.7, 1.05, 1.35)
+rotation_degrees = Vector3(0, 20, 0)
+
+[sub_resource type="Resource" id="Resource_qk06r"]
+script = ExtResource("5_xk2yq")
+center = Vector3(0.7, 1.75, -0.2)
+radii = Vector3(1.05, 0.75, 0.95)
+rotation_degrees = Vector3(0, -15, 12)
+
+[sub_resource type="Resource" id="Resource_edm5t"]
+script = ExtResource("5_xk2yq")
+center = Vector3(-0.9, 0.7, 0.5)
+radii = Vector3(1.15, 0.65, 0.9)
+rotation_degrees = Vector3(0, 35, -8)
+
+[sub_resource type="Resource" id="Resource_25lx7"]
+script = ExtResource("3_cgtdb")
+shapes = Array[ExtResource("4_lkt61")]([SubResource("Resource_3jkvo"), SubResource("Resource_qk06r"), SubResource("Resource_edm5t")])
+blend = 0.8
+
+[resource]
+script = ExtResource("2_p5ody")
+shape = SubResource("Resource_25lx7")
+noise = ExtResource("1_4g5wb")
+amplitude = 0.12
+noise_slope_per_frequency = 6.0
